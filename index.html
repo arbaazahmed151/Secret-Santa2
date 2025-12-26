@@ -13,7 +13,7 @@
 
   <input
     id="psno"
-    placeholder="e.g. 1234"
+    placeholder="e.g. 20358487"
     style="padding:10px; width:220px"
   />
   <br><br>
@@ -57,7 +57,9 @@ function drawChit() {
   })
   .then(res => res.text())
   .then(result => {
-     if (result === "PS_ALREADY_USED") {
+    if (result === "INVALID_PS") {
+      alert("❌ Invalid PS Number");
+    } else if (result === "PS_ALREADY_USED") {
       alert("⚠️ PS Number already used");
     } else if (result === "NO_NAMES_LEFT") {
       alert("🎄 All names have been assigned");
