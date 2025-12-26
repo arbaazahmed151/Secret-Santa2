@@ -1,78 +1,48 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Secret Santa Draw</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-
-<body style="font-family:Arial; text-align:center; padding:40px">
-
-  <h2>🎅 Secret Santa</h2>
-
-  <label><b>Enter PS Number</b></label><br><br>
-
-  <input
-    id="psno"
-    placeholder="e.g. 1234"
-    style="padding:10px; width:220px"
-  />
-  <br><br>
-
-  <button
-    onclick="drawChit()"
-    style="padding:10px 25px; font-size:16px"
-  >
-    Draw My Chit
-  </button>
-
-  <h3 id="result" style="margin-top:30px;"></h3>
-
 <script>
-/* 🔗 CONNECTED GOOGLE APPS SCRIPT URL */
 const API_URL =
 "https://script.google.com/macros/s/AKfycbzOAzqiQ2aFJU9omfQeDPC0h_PThCO7hpaCPmudBJXMZv-MRPozRN-BS_uJJsTGUjus/exec";
 
 function drawChit() {
-  const psno = document.getElementById("psno").value.trim();
-  if (!psno) {
-    alert("Please enter PS Number");
+  const psInput = document.getElementById("psno");
+  const psno = psInput.value.trim();
+
+  if (psno === "") {
+    alert("Enter PS Number");
     return;
   }
 
-  // One device = one identity
-  let device = localStorage.getItem("ss_device_id");
+  let device = localStorage.getItem("ss_device");
   if (!device) {
-    device = "DEV-" + Math.random().toString(36).substring(2, 10);
-    localStorage.setItem("ss_device_id", device);
+    device = "DEV-" + Date.now();
+    localStorage.setItem("ss_device", device);
   }
 
-  // Send data as FORM (no CORS issues)
-  const formData = new FormData();
-  formData.append("psno", psno);
-  formData.append("device", device);
+  const form = new FormData();
+  form.append("psno", psno);
+  form.append("device", device);
 
-  fetch(API_URL, {
+  fetch(API_URL + "?t=" + Date.now(), {
     method: "POST",
-    body: formData
+    body: form
   })
   .then(res => res.text())
-  .then(result => {
-    if (result === "INVALID_PS") {
+  .then(res => {
+    if (res === "INVALID_PS") {
       alert("❌ Invalid PS Number");
-    } else if (result === "PS_ALREADY_USED") {
+    } else if (res === "PS_ALREADY_USED") {
       alert("⚠️ PS Number already used");
-    } else if (result === "NO_NAMES_LEFT") {
-      alert("🎄 All names have been assigned");
+    } else if (res === "NO_NAMES_LEFT") {
+      alert("🎄 All names assigned");
+    } else if (res === "CONFIG_ERROR") {
+      alert("⚙️ Configuration error (sheet names)");
     } else {
       document.getElementById("result").innerText =
-        "🎁 You got: " + result;
+        "🎁 You got: " + res;
     }
   })
-  .catch(() => {
-    alert("Unable to connect. Please try again.");
+  .catch(err => {
+    console.error(err);
+    alert("❌ Network error");
   });
 }
 </script>
-
-</body>
-</html>
