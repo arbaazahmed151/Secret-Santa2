@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Secret Santa Draw</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body style="font-family:Arial; text-align:center; padding:40px">
+
+  <h2>🎅 Secret Santa</h2>
+
+  <label><b>Enter PS Number</b></label><br><br>
+
+  <input
+    id="psno"
+    placeholder="e.g. 20358487"
+    style="padding:10px; width:220px"
+  />
+  <br><br>
+
+  <button
+    onclick="drawChit()"
+    style="padding:10px 25px; font-size:16px"
+  >
+    Draw My Chit
+  </button>
+
+  <h3 id="result" style="margin-top:30px;"></h3>
+
+<script>
+/* 🔗 CONNECTED GOOGLE APPS SCRIPT URL */
+const API_URL =
+"https://script.google.com/macros/s/AKfycbzOAzqiQ2aFJU9omfQeDPC0h_PThCO7hpaCPmudBJXMZv-MRPozRN-BS_uJJsTGUjus/exec";
+
+function drawChit() {
+  const psno = document.getElementById("psno").value.trim();
+  if (!psno) {
+    alert("Please enter PS Number");
+    return;
+  }
+
+  // One device = one identity
+  let device = localStorage.getItem("ss_device_id");
+  if (!device) {
+    device = "DEV-" + Math.random().toString(36).substring(2, 10);
+    localStorage.setItem("ss_device_id", device);
+  }
+
+  // Send data as FORM (no CORS issues)
+  const formData = new FormData();
+  formData.append("psno", psno);
+  formData.append("device", device);
+
+  fetch(API_URL, {
+    method: "POST",
+    body: formData
+  })
+  .then(res => res.text())
+  .then(result => {
+    if (result === "INVALID_PS") {
+      alert("❌ Invalid PS Number");
+    } else if (result === "PS_ALREADY_USED") {
+      alert("⚠️ PS Number already used");
+    } else if (result === "NO_NAMES_LEFT") {
+      alert("🎄 All names have been assigned");
+    } else {
+      document.getElementById("result").innerText =
+        "🎁 You got: " + result;
+    }
+  })
+  .catch(() => {
+    alert("Unable to connect. Please try again.");
+  });
+}
+</script>
+
+</body>
+</html>
